@@ -1,0 +1,5 @@
+node_modules/
+dist/
+state/op-*
+*.tmp
+.DS_Store

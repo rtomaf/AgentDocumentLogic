@@ -1,0 +1,45 @@
+{
+  "name": "@openclaw/agent-document-logic",
+  "version": "0.1.0",
+  "description": "OpenClaw plugin for large document processing with structured agent loop",
+  "private": true,
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.48",
+    "cheerio": "^1.0.0",
+    "docx": "^9.2.0",
+    "gray-matter": "^4.0.3",
+    "js-tiktoken": "^1.0.18",
+    "mammoth": "^1.8.0",
+    "openai": "^5.0.0",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.15.1",
+    "turndown": "^7.2.0",
+    "uuid": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pdfkit": "^0.17.5",
+    "@types/turndown": "^5.0.5",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "peerDependencies": {
+    "openclaw": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

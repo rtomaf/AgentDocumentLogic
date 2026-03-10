@@ -1,0 +1,50 @@
+{
+  "id": "agent-document-logic",
+  "name": "Agent Document Logic",
+  "version": "0.1.0",
+  "description": "Large document processing agent with structured planning, section-by-section execution, and full persistence",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "openaiApiKey": {
+        "type": "string",
+        "description": "OpenAI API key for GPT-5.4 access"
+      },
+      "stateDir": {
+        "type": "string",
+        "description": "Directory for operation state persistence",
+        "default": "./state"
+      },
+      "defaultTokenBudget": {
+        "type": "number",
+        "description": "Token budget per processing window",
+        "default": 50000
+      },
+      "defaultOverlapTokens": {
+        "type": "number",
+        "description": "Overlap context tokens at chunk boundaries",
+        "default": 500
+      },
+      "maxRetries": {
+        "type": "number",
+        "description": "Maximum retry attempts per failed task",
+        "default": 3
+      },
+      "reasoningEffort": {
+        "type": "string",
+        "enum": ["low", "medium", "high"],
+        "description": "GPT-5.4 reasoning effort level",
+        "default": "medium"
+      }
+    },
+    "required": ["openaiApiKey"]
+  },
+  "uiHints": {
+    "openaiApiKey": { "label": "OpenAI API Key", "sensitive": true },
+    "stateDir": { "label": "State Directory", "placeholder": "./state" },
+    "defaultTokenBudget": { "label": "Token Budget per Window", "placeholder": "50000" },
+    "reasoningEffort": { "label": "Reasoning Effort", "placeholder": "medium" }
+  },
+  "skills": ["./skills"]
+}
