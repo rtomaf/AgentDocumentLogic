@@ -1,15 +1,12 @@
 {
   "id": "agent-document-logic",
-  "name": "Agent Document Logic",
-  "version": "0.1.0",
-  "description": "Large document processing agent with structured planning, section-by-section execution, and full persistence",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
       "openaiApiKey": {
         "type": "string",
-        "description": "OpenAI API key for GPT-5.4 access"
+        "description": "OpenAI API key (falls back to OPENAI_API_KEY env var)"
       },
       "stateDir": {
         "type": "string",
@@ -37,14 +34,9 @@
         "description": "GPT-5.4 reasoning effort level",
         "default": "medium"
       }
-    },
-    "required": ["openaiApiKey"]
+    }
   },
-  "uiHints": {
-    "openaiApiKey": { "label": "OpenAI API Key", "sensitive": true },
-    "stateDir": { "label": "State Directory", "placeholder": "./state" },
-    "defaultTokenBudget": { "label": "Token Budget per Window", "placeholder": "50000" },
-    "reasoningEffort": { "label": "Reasoning Effort", "placeholder": "medium" }
-  },
-  "skills": ["./skills"]
+  "skills": [
+    { "id": "document-agent", "path": "skills/document-agent" }
+  ]
 }

@@ -41,6 +41,11 @@ export async function handleEditSection(params: EditSectionParams, _config: Plug
     }
   }
 
+  // Ensure proper boundary: replacement should end with \n\n before next section
+  if (!replacement.endsWith("\n\n")) {
+    replacement = replacement.replace(/\n*$/, "\n\n");
+  }
+
   const newContent = content.slice(0, section.startOffset) + replacement + content.slice(section.endOffset);
   await writeDocument(params.documentPath, newContent, format);
 

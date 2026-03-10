@@ -6,6 +6,9 @@ description: >
   Markdown, DOCX, PDF, and HTML. Resumes interrupted operations.
 user-invocable: true
 disable-model-invocation: false
+metadata:
+  openclaw:
+    always: true
 ---
 
 # Document Processing Agent

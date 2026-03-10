@@ -1,4 +1,3 @@
-import type { PluginConfig } from "./types/config.js";
 import { resolveConfig } from "./types/config.js";
 import { handleReadDocument } from "./tools/read-document.js";
 import { handleWriteDocument } from "./tools/write-document.js";
@@ -8,22 +7,57 @@ import { handleGetSection } from "./tools/get-section.js";
 import { handleValidateDocument } from "./tools/validate-document.js";
 import { handleGetProgress } from "./tools/get-progress.js";
 import { handleResumeOperation } from "./tools/resume-operation.js";
-import { runAgentLoop } from "./core/agent-loop.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyParams = any;
+type Any = any;
 
-interface ToolDefinition {
-  name: string;
-  description: string;
-  parameters: Record<string, unknown>;
-  execute: (params: AnyParams, config: PluginConfig) => Promise<unknown>;
+interface PluginApi {
+  pluginConfig?: Record<string, unknown>;
+  logger: { info: (...args: Any[]) => void; error: (...args: Any[]) => void; warn?: (...args: Any[]) => void };
+  registerTool: (tool: Any) => void;
 }
 
-function defineTools(config: PluginConfig): ToolDefinition[] {
-  return [
+function wrapExecute(handler: (params: Any, config: Any) => Promise<Any>, config: Any) {
+  return async (_toolCallId: string, params: Any, _signal?: AbortSignal) => {
+    try {
+      const result = await handler(params, config);
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+        details: result,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        content: [{ type: "text" as const, text: `Error: ${message}` }],
+        details: { error: message },
+      };
+    }
+  };
+}
+
+export default function register(api: PluginApi) {
+  const pluginCfg = (api.pluginConfig ?? {}) as Record<string, unknown>;
+  const openaiApiKey = (pluginCfg.openaiApiKey as string)
+    || process.env.OPENAI_API_KEY
+    || "";
+
+  if (!openaiApiKey) {
+    api.logger.warn?.("[agent-document-logic] No OpenAI API key found. Set OPENAI_API_KEY or provide openaiApiKey in plugin config.");
+  }
+
+  const config = resolveConfig({
+    openaiApiKey,
+    stateDir: (pluginCfg.stateDir as string) || undefined,
+    defaultTokenBudget: (pluginCfg.defaultTokenBudget as number) || undefined,
+    defaultOverlapTokens: (pluginCfg.defaultOverlapTokens as number) || undefined,
+    maxRetries: (pluginCfg.maxRetries as number) || undefined,
+    reasoningEffort: (pluginCfg.reasoningEffort as "low" | "medium" | "high") || undefined,
+  });
+
+  const tools = [
     {
       name: "read_document",
+      label: "Read Document",
       description:
         "Read a large document with automatic format detection, structural parsing, and chunked access. Returns document metadata, section index, and optionally content.",
       parameters: {
@@ -36,10 +70,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["path"],
       },
-      execute: (params: AnyParams) => handleReadDocument(params, config),
+      execute: wrapExecute(handleReadDocument, config),
     },
     {
       name: "write_document",
+      label: "Write Document",
       description: "Write or create a document in the specified format. Supports plaintext, markdown, HTML, DOCX, and PDF.",
       parameters: {
         type: "object",
@@ -51,10 +86,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["path", "content"],
       },
-      execute: (params: AnyParams) => handleWriteDocument(params, config),
+      execute: wrapExecute(handleWriteDocument, config),
     },
     {
       name: "edit_section",
+      label: "Edit Section",
       description:
         "Edit a specific section of a document by its section ID from the structural index. Preserves surrounding content.",
       parameters: {
@@ -67,10 +103,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["documentPath", "sectionId", "newContent"],
       },
-      execute: (params: AnyParams) => handleEditSection(params, config),
+      execute: wrapExecute(handleEditSection, config),
     },
     {
       name: "create_index",
+      label: "Create Index",
       description:
         "Generate a structural index of a document showing all sections, headings, hierarchy, and token counts.",
       parameters: {
@@ -80,10 +117,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["path"],
       },
-      execute: (params: AnyParams) => handleCreateIndex(params, config),
+      execute: wrapExecute(handleCreateIndex, config),
     },
     {
       name: "get_section",
+      label: "Get Section",
       description: "Retrieve a specific section's content by ID or index from a document, with optional overlap context.",
       parameters: {
         type: "object",
@@ -96,10 +134,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["documentPath"],
       },
-      execute: (params: AnyParams) => handleGetSection(params, config),
+      execute: wrapExecute(handleGetSection, config),
     },
     {
       name: "validate_document",
+      label: "Validate Document",
       description:
         "Validate a document's structural integrity: check for gaps, broken references, encoding issues, and format compliance.",
       parameters: {
@@ -114,10 +153,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["path"],
       },
-      execute: (params: AnyParams) => handleValidateDocument(params, config),
+      execute: wrapExecute(handleValidateDocument, config),
     },
     {
       name: "get_progress",
+      label: "Get Progress",
       description: "Check the current progress of an ongoing document processing operation.",
       parameters: {
         type: "object",
@@ -126,10 +166,11 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["operationId"],
       },
-      execute: (params: AnyParams) => handleGetProgress(params, config),
+      execute: wrapExecute(handleGetProgress, config),
     },
     {
       name: "resume_operation",
+      label: "Resume Operation",
       description: "Resume an interrupted document processing operation from its last checkpoint.",
       parameters: {
         type: "object",
@@ -139,34 +180,13 @@ function defineTools(config: PluginConfig): ToolDefinition[] {
         },
         required: ["operationId"],
       },
-      execute: (params: AnyParams) => handleResumeOperation(params, config),
+      execute: wrapExecute(handleResumeOperation, config),
     },
   ];
+
+  for (const tool of tools) {
+    api.registerTool(tool);
+  }
+
+  api.logger.info(`[agent-document-logic] Plugin loaded with ${tools.length} tools`);
 }
-
-// OpenClaw Plugin Definition
-export default {
-  id: "agent-document-logic",
-  name: "Agent Document Logic",
-  description:
-    "Large document processing agent with structured planning and section-by-section execution",
-
-  register(api: {
-    registerTool: (tool: ToolDefinition) => void;
-    getConfig: () => Partial<PluginConfig> & { openaiApiKey: string };
-    logger: { info: (msg: string) => void };
-  }) {
-    const rawConfig = api.getConfig();
-    const config = resolveConfig(rawConfig);
-    const tools = defineTools(config);
-
-    for (const tool of tools) {
-      api.registerTool(tool);
-    }
-
-    api.logger.info(`Agent Document Logic plugin loaded with ${tools.length} tools`);
-  },
-
-  // Expose the agent loop for direct invocation
-  runAgentLoop,
-};

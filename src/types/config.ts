@@ -15,9 +15,10 @@ export const DEFAULT_CONFIG: Omit<PluginConfig, "openaiApiKey"> = {
   reasoningEffort: "medium",
 };
 
-export function resolveConfig(partial: Partial<PluginConfig> & { openaiApiKey: string }): PluginConfig {
+export function resolveConfig(partial: Partial<PluginConfig>): PluginConfig {
   return {
     ...DEFAULT_CONFIG,
-    ...partial,
+    openaiApiKey: "",
+    ...Object.fromEntries(Object.entries(partial).filter(([, v]) => v !== undefined)),
   };
 }
