@@ -56,10 +56,10 @@ export default function register(api: PluginApi) {
 
   const tools = [
     {
-      name: "read_document",
-      label: "Read Document",
+      name: "adl_read",
+      label: "ADL Read Document",
       description:
-        "Read a large document with automatic format detection, structural parsing, and chunked access. Returns document metadata, section index, and optionally content.",
+        "Read a document file from disk with automatic format detection (txt, md, docx, pdf, html), structural parsing into sections, and token counting. Returns metadata and section index.",
       parameters: {
         type: "object",
         properties: {
@@ -73,9 +73,9 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleReadDocument, config),
     },
     {
-      name: "write_document",
-      label: "Write Document",
-      description: "Write or create a document in the specified format. Supports plaintext, markdown, HTML, DOCX, and PDF.",
+      name: "adl_write",
+      label: "ADL Write Document",
+      description: "Write or create a document file on disk in the specified format. Supports plaintext, markdown, HTML, DOCX, and PDF output.",
       parameters: {
         type: "object",
         properties: {
@@ -89,10 +89,10 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleWriteDocument, config),
     },
     {
-      name: "edit_section",
-      label: "Edit Section",
+      name: "adl_edit_section",
+      label: "ADL Edit Section",
       description:
-        "Edit a specific section of a document by its section ID from the structural index. Preserves surrounding content.",
+        "Replace the content of a specific section in a document file on disk, identified by section ID from adl_index. Preserves heading and surrounding content.",
       parameters: {
         type: "object",
         properties: {
@@ -106,10 +106,10 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleEditSection, config),
     },
     {
-      name: "create_index",
-      label: "Create Index",
+      name: "adl_index",
+      label: "ADL Create Index",
       description:
-        "Generate a structural index of a document showing all sections, headings, hierarchy, and token counts.",
+        "Parse a document file on disk and generate a structural index showing all sections, headings, hierarchy levels, and token counts per section.",
       parameters: {
         type: "object",
         properties: {
@@ -120,9 +120,9 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleCreateIndex, config),
     },
     {
-      name: "get_section",
-      label: "Get Section",
-      description: "Retrieve a specific section's content by ID or index from a document, with optional overlap context.",
+      name: "adl_get_section",
+      label: "ADL Get Section",
+      description: "Retrieve a specific section's full content from a document file on disk, by section ID or index. Optionally includes overlap context from adjacent sections.",
       parameters: {
         type: "object",
         properties: {
@@ -137,10 +137,10 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleGetSection, config),
     },
     {
-      name: "validate_document",
-      label: "Validate Document",
+      name: "adl_validate",
+      label: "ADL Validate",
       description:
-        "Validate a document's structural integrity: check for gaps, broken references, encoding issues, and format compliance.",
+        "Validate a document file's structural integrity on disk: check for section gaps, broken references, encoding issues, and format compliance.",
       parameters: {
         type: "object",
         properties: {
@@ -156,9 +156,9 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleValidateDocument, config),
     },
     {
-      name: "get_progress",
-      label: "Get Progress",
-      description: "Check the current progress of an ongoing document processing operation.",
+      name: "adl_progress",
+      label: "ADL Progress",
+      description: "Check the current progress of an ongoing ADL document processing operation by operation ID.",
       parameters: {
         type: "object",
         properties: {
@@ -169,9 +169,9 @@ export default function register(api: PluginApi) {
       execute: wrapExecute(handleGetProgress, config),
     },
     {
-      name: "resume_operation",
-      label: "Resume Operation",
-      description: "Resume an interrupted document processing operation from its last checkpoint.",
+      name: "adl_resume",
+      label: "ADL Resume",
+      description: "Resume an interrupted ADL document processing operation from its last checkpoint.",
       parameters: {
         type: "object",
         properties: {
